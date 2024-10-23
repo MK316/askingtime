@@ -1,9 +1,9 @@
 import streamlit as st
-from datetime import datetime
-import pytz
-from gtts import gTTS
-import random
+from gtts import gTTS  # Google Text-to-Speech
+import tempfile
 import io
+import pytz
+from datetime import datetime
 
 # Title of the app
 st.title("🌍 What Time is it in Different Cities?")
@@ -59,11 +59,16 @@ if st.button("Generate Speech"):
         else:  # If no TLD, just use the language code
             tts = gTTS(text=mytext, lang=lang_code, slow=False)
 
-        # Save to a buffer and play the audio
-        audio_buffer = io.BytesIO()
-        tts.save(audio_buffer, format="mp3")
-        audio_buffer.seek(0)
+        # Save to a temporary file first
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
+            tts.save(tmp_file.name)
+            tmp_file_path = tmp_file.name
 
+        # Read the temporary file into a BytesIO buffer
+        with open(tmp_file_path, "rb") as f:
+            audio_buffer = io.BytesIO(f.read())
+
+        # Play the audio in Streamlit
         st.audio(audio_buffer, format="audio/mp3")
     else:
         st.warning("Please select a city and type a sentence.")
